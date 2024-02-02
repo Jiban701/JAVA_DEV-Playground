@@ -1,0 +1,159 @@
+Graphql with spring boot :
+ 
+There are three layers in any application :
+Representation layer :::: Business layer :::: Data layer
+ 
+Graphql comes at the representation layer
+ 
+Benefits : any client can come and fetch the data based on their requirement
+ 
+In Graphql we just have to define the schema and based on that it does the operations.
+ 
+Dependency name : Spring for Graphql
+ 
+Define packages : controller, model & service
+ 
+In Model :
+Player class , Team class (Enum)
+ 
+Team class is an enum :
+ 
+public enum Team{
+CSK,
+GT,
+DC,
+MI
+}
+ 
+Player class :
+ 
+public record Player(Integer Id, String name, Team team)
+{
+ 
+}
+ 
+In Service : PlayerService class
+ 
+PlayerService class :
+ 
+@Service
+public class PlayerService{
+ 
+To store players :
+private List<Player> player = new ArrayList<>();
+ 
+To Generate Id sequentially:
+AtomicInteger id = new AtomicInteger(0);
+ 
+public List<Player> findAll()
+{
+return players;
+}
+ 
+public Optional<player> findOne(Integer id)
+{
+return players.stream()
+.filter(player -> player.Id() == id).findFirst();
+}
+ 
+Create Player  :
+ 
+public Player create(String name, Team team)
+{
+Player player = new Player(id.incrementAndGet(), name, team);
+player.add(player);
+return player;
+}
+ 
+Delete a player :
+ 
+public Player delete(Integer id){
+Player player = players.stream().filter(c -> c.Id() == id)
+.findFirst().orElseThrow(() -> new IllegalArgumentException);
+players.remove(player);
+return player;
+ 
+}
+ 
+Update Player :
+ 
+public Player update(Integer id, String name, Team team)
+{
+Player updatedPlayer = new Player(id, name, team);
+Optional<Player> optional = players.stream().filter(c -> c.Id() == id).findFirst();
+if(optional.isPresent())
+{
+Player player = optional.get();
+int index = players.indexOf(player);
+players.set(index, updatedPlayer);
+}
+else
+{
+throw new IllegalArgumentException("Invalid Player")
+ 
+}
+return updatedPlayer;
+ 
+}
+ 
+Using PostConstruct we are make sure that before this service is created or triggered some data is already created for using
+ 
+@PostConstruct
+private void init()
+{
+players.add(new player(id.incrementAndGet(), "MS Dhoni", Team.CSK);
+players.add(new player(id.incrementAndGet(), "Rohit", Team.MI);
+players.add(new player(id.incrementAndGet(), "Kholi", Team.RCB);
+players.add(new player(id.incrementAndGet(), "Rishab", Team.DC);
+players.add(new player(id.incrementAndGet(), "Hardik", Team.GT);
+}
+}
+ 
+In Resource / graphql
+create a file named : schema.graphqls
+ 
+type Player{
+id:ID!                 ! mark that we have added make the Id Mandatory
+name : String
+team : Team
+ 
+}
+ 
+enum Team{
+CSK
+MI
+GT
+DC
+ 
+}
+ 
+type Query{
+ 
+findAll:[Player]        :: List of players
+findOne(id : ID) : player
+}
+ 
+PLAYERCONTROLLER :
+ 
+@Controller
+public class PlayerController{
+ 
+private final PlayerService playerService;
+ 
+public PlayerController(PlayerService playerService)
+{
+this.playerService = playerService;
+}
+ 
+@QueryMapping
+public List<Player> findAll()
+{
+return playerService.findAll();
+}
+ 
+@QueryMapping
+public Optional<player> findOne(Integer id){
+return playerService.findOne(id);
+}
+ 
+}
