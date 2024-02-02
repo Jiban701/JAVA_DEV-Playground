@@ -1,0 +1,162 @@
+Kafka Notes :
+ 
+Apache Kafka :
+ 
+Communication system between sender & receiver
+ 
+ 
+Sender ::::::::::: Kafka :::::::::::: Receiver
+ 
+ 
+Works on  publish   &    Subscribe
+ 
+Examples of using Kafka : Cab booking App
+ 
+Advantages :
+ 
+High throughput (handles 1000s of operations/transactions)
+Fault Tolerant (It will also handle different replicas i.e on leader will have the data & will handles other replicas incase if something happens to the leader one of the replicas will act as leader )
+Scalable
+ 
+ 
+Kafka Architecture :
+ 
+kafka Eco-system
+Kafka Cluster
+Broker1
+Topic1
+Partition1
+Offset
+Partition2
+Broker2
+Topic2
+Zookeeper
+ 
+ 
+ 
+Installing Apache Kafka :
+Use docker for it
+ 
+Building Application :
+ 
+CAB BOOKING APPLICATION
+ 
+User Application ::::::::: Kafka cluster ::::::::::: Driver Application
+ 
+ 
+Dependency Name : Spring for Apache Kafka
+ 
+Driver Application:
+ 
+Packages : controller , service, constant & config
+ 
+constant package : AppConstant class
+ 
+public class AppConstant
+{
+public static final String CAB_LOCATION = "cab-location";
+}
+ 
+controller package : CabLocationController class
+ 
+@RestController
+@RequestMapping("/location")
+public class CabLocationController{
+ 
+@Autowired
+private CabLocationService cabLocationService;
+ 
+//Business logic
+ 
+ 
+ 
+ 
+@PutMapping
+public ResponseEntity updateLocation() throws InterruptedException{
+ 
+int range = 100;
+while(range > 0)
+{
+cabLocationService.updateLocation(Math.random()+"," + Math.random());       
+Thread.sleep(1000);
+range--;
+}
+ 
+ 
+return new ResponseEntity<>(Map.of("Message", "Location Updated Successfully"), HttpStatus.OK);
+}
+}
+ 
+Service package : CabLocationService class
+ 
+@Service
+public class CabLocationService{
+ 
+@Autowired
+private kafkaTemplate<String,Object> kafkaTemplate;
+ 
+public boolean updateLocation(String location)
+{
+kafkaTemplate.send(AppConstant.CAB_LOCATION, location);
+return true;
+ 
+}
+ 
+ 
+}
+ 
+config Package : KafkaConfig
+ 
+@confugration
+public class KafkaConfig{
+ 
+@Bean
+public NewTopic topic()
+{
+return TopicBuilder
+.name(AppConstant.CAB_LOCATION)
+.build();
+ 
+}
+ 
+}
+ 
+ 
+Application.propreties for producer  :
+server.port=8082;
+spring.kafka.producer.bootstrap-servers=localhost:9092;
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer;
+spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer;
+ 
+ 
+ 
+Run the Spring boot application :
+ 
+Run Kafka
+Start the topic for producer by copy pasting the command and just change the name of ur topic in place of quick start-event
+Run one more topic for consumer
+ 
+Now go to postman and run the application. if you go to terminal you will see that data is being generated for publisher
+ 
+ 
+USER_APPLICATION :
+ 
+Application.propreties for consumer :
+server.port=8082;
+spring.kafka.consumer.bootstrap-servers=localhost:9092;
+spring.kafka.consumer.key-serializer=org.apache.kafka.common.serialization.StringSerializer;
+spring.kafka.consumer.value-serializer=org.apache.kafka.common.serialization.StringSerializer;
+spring.kafka.consumer.group-id=user-group {Important understand more on it }
+spring.kafka.consumer.auto-offset-reset=earliest {If we want the data from starting and earliest point}
+ 
+ 
+Service :
+@Service
+public class LocationService
+{
+@kafkaListner(topics = "cab-location", groupId = "user-group")
+public void cabLocation(Sting Location)
+{
+System.out.println(location);
+}
+}
